@@ -1,5 +1,7 @@
 package org.springnext.builder.entity;
 
+import java.io.File;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
@@ -7,7 +9,7 @@ import javax.xml.bind.annotation.XmlTransient;
 /**
  * 项目信息
  * 
- * @author hyde
+ * @author HyDe
  *
  */
 @XmlRootElement(name="project")
@@ -47,12 +49,42 @@ public class ProjectInfo implements java.io.Serializable {
 	 * 项目的详细描述, Maven 产生的文档用。
 	 */
 	private String description;
+	
+	/**
+	 * 项目根目录
+	 */
+	@XmlTransient
+	private String projectSrc;
 
 	/**
 	 * 包名
 	 */
 	@XmlTransient
 	private String packageName;
+	
+	/**
+	 * 模块名
+	 */
+	@XmlTransient
+	private String modelName;
+	
+	/**
+	 * 菜单模块名
+	 */
+	@XmlTransient
+	private String menuModelName;
+	
+	/**
+	 * 表前缀
+	 */
+	@XmlTransient
+	private String tablePrefix;
+	
+	/**
+	 * 作者
+	 */
+	@XmlTransient
+	private String author;
 
 	@XmlElement(name="groupId")
 	public String getGroupId() {
@@ -116,4 +148,83 @@ public class ProjectInfo implements java.io.Serializable {
 		this.packageName = packageName;
 	}
 
+	public String getProjectSrc() {
+		return projectSrc;
+	}
+
+	public void setProjectSrc(String projectSrc) {
+		this.projectSrc = projectSrc;
+	}
+
+	public String getModelName() {
+		return modelName;
+	}
+
+	public void setModelName(String modelName) {
+		this.modelName = modelName;
+	}
+	
+	public String getMenuModelName() {
+		return menuModelName;
+	}
+
+	public void setMenuModelName(String menuModelName) {
+		this.menuModelName = menuModelName;
+	}
+
+	public String getTablePrefix() {
+		return tablePrefix;
+	}
+
+	public void setTablePrefix(String tablePrefix) {
+		this.tablePrefix = tablePrefix;
+	}
+	
+	public String getAuthor() {
+		return author;
+	}
+
+	public void setAuthor(String author) {
+		this.author = author;
+	}
+
+	public String getRelativePackageBasePath() {
+		return "src" + File.separator + "main" + File.separator + "java" + File.separator;
+	}
+	
+	public String getRelativeResourcesPath() {
+		return "src" + File.separator + "main" + File.separator + "resources" + File.separator;
+	}
+
+	public String getPackagePath() {
+		return getPackageName().replace(".", File.separator)+File.separator;
+	}
+	
+	public String getTemplatesPath() {
+		return "templates"+File.separator;
+	}
+	
+	public String getAbsoluteSrcPath() {
+		return getProjectSrc().replace("pom.xml", "");
+	}
+	
+	public String getAbsolutePackageBasePath() {
+		return getAbsoluteSrcPath()+getRelativePackageBasePath();
+	}
+	
+	public String getAbsoluteResourcesPath() {
+		return getAbsoluteSrcPath()+getRelativeResourcesPath();
+	}
+	
+	public String getAbsolutePackagePath() {
+		return getAbsolutePackageBasePath()+getPackagePath();
+	}
+	
+	public String getAbsoluteModelNamePackagePath() {
+		return getAbsolutePackagePath()+getModelName()+File.separator;
+	}
+	
+	public String getAbsoluteResourcesFilePath() {
+		return getAbsoluteResourcesPath()+getModelName()+File.separator;
+	}
 }

@@ -2,6 +2,7 @@ package org.springnext.builder.utils;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -225,5 +226,34 @@ public class FileUtils {
 		}
 		return null;
 	}
+	
+	/**
+     * 生成文件.
+     *
+     * @param relativePath 相对路径
+     * @param fileName     文件名
+     * @param content      文件内容
+     */
+    public static void generateFile(String absolutePath, String fileName, String content) throws Exception {
+        // 定义文件路径对象
+        File directory = new File(absolutePath);
+        // 如果路径不存在
+        if (!directory.exists()) {
+            // 创建路径
+            directory.mkdirs();
+        }
+        // 定义文件对象
+        File file = new File(absolutePath + fileName);
+        // 根据文件对象创建文件输出流
+        FileOutputStream fileOutputStream = new FileOutputStream(file, false);
+        // 创建输出流写入器
+        OutputStreamWriter outputStreamWriter = new OutputStreamWriter(fileOutputStream, "utf-8");
+        // 创建缓冲区写入器
+        BufferedWriter bufferedWriter = new BufferedWriter(outputStreamWriter);
+        // 写入文件内容
+        bufferedWriter.write(content);
+        // 关闭缓冲区写入器
+        bufferedWriter.close();
+    }
 
 }

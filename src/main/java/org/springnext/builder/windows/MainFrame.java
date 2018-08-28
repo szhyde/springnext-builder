@@ -8,15 +8,8 @@ import java.awt.Insets;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.Driver;
-import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -38,8 +31,10 @@ import javax.swing.table.DefaultTableModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+import org.springnext.builder.database.DatabaseReader;
 import org.springnext.builder.entity.ProjectInfo;
-import org.springnext.builder.service.BuilderService;
+import org.springnext.builder.entity.Table;
+import org.springnext.builder.generator.BuilderService;
 
 @Component
 public class MainFrame extends JFrame {
@@ -47,52 +42,58 @@ public class MainFrame extends JFrame {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 1L;
+	public static final long serialVersionUID = 1L;
 
 	@Autowired
-	private BuilderService builderService;
+	public BuilderService builderService;
 
 	// 老项目包名输入框
-	private JTextField oldPackageText;
+	public JTextField oldPackageText;
 	// 老项目GroupID输入框
-	private JTextField oldGroupIDText;
+	public JTextField oldGroupIDText;
 	// 老项目ArtifactID输入框
-	private JTextField oldArtifactIDText;
+	public JTextField oldArtifactIDText;
 	// 老项目version输入框
-	private JTextField oldVersionText;
+	public JTextField oldVersionText;
 	// 老项目名输入框
-	private JTextField oldNameText;
+	public JTextField oldNameText;
 	// 老项目URL输入框
-	private JTextField oldURLText;
+	public JTextField oldURLText;
 	// 老项目Description输入框
-	private JTextField oldDescriptionText;
+	public JTextField oldDescriptionText;
 	// 新项目包名输入框
-	private JTextField newPackageText;
+	public JTextField newPackageText;
 	// 新项目GroupID输入框
-	private JTextField newGroupIDText;
+	public JTextField newGroupIDText;
 	// 新项目ArtifactID输入框
-	private JTextField newArtifactIDText;
+	public JTextField newArtifactIDText;
 	// 新项目version输入框
-	private JTextField newVersionText;
+	public JTextField newVersionText;
 	// 新项目名输入框
-	private JTextField newNameText;
+	public JTextField newNameText;
 	// 新项目URL输入框
-	private JTextField newURLText;
+	public JTextField newURLText;
 	// 新项目Description输入框
-	private JTextField newDescriptionText;
+	public JTextField newDescriptionText;
 	// 项目路径
-	private JTextField projectSrcText;
-	private JTextField driverName;
-	private JTextField dbURL;
-	private JTextField dbUserName;
-	private JTextField dbPassword;
-	private JTable table;
-	private JTextField driverFile;
+	public JTextField projectSrcText;
+	public JTextField dbURL;
+	public JTextField dbUserName;
+	public JTextField dbPassword;
+	public JTable table;
+	
+	public List<Table> tableList;
+	public ProjectInfo projectInfo;
 
 	/*
 	 * 设置JTable的列名
 	 */
-	private String[] columnNames = { "表名" };
+	public String[] columnNames = { "表名","备注" };
+	public JTextField dbName;
+	public JTextField menuModelName;
+	public JTextField modelName;
+	public JTextField tablePrefix;
+	private JTextField author;
 
 	/**
 	 * Create the panel.
@@ -110,7 +111,7 @@ public class MainFrame extends JFrame {
 	/**
 	 * 主窗体参数设置
 	 */
-	private void initMainFrame() {
+	public void initMainFrame() {
 		// 设置窗体图标与标题
 		setIconImage(Toolkit.getDefaultToolkit()
 				.getImage(MainFrame.class.getResource("/org/springnext/builder/image/favicon.png")));
@@ -141,7 +142,7 @@ public class MainFrame extends JFrame {
 	/**
 	 * 主窗体上半部份布局设置
 	 */
-	private void initNorthPane() {
+	public void initNorthPane() {
 		JPanel panelTop = new JPanel();
 		getContentPane().add(panelTop, BorderLayout.NORTH);
 
@@ -178,7 +179,6 @@ public class MainFrame extends JFrame {
 				JFileChooser chooser = new JFileChooser(); // 设置选择器
 				chooser.setMultiSelectionEnabled(false); // 设为单选
 				int returnVal = chooser.showOpenDialog(btnNewButton); // 打开文件选择框并接收选择框返回值
-				System.out.println("returnVal=" + returnVal);
 				// 判断用户是选择取消还是确定
 				if (returnVal == JFileChooser.APPROVE_OPTION) { // 如果符合文件类型
 
@@ -210,8 +210,10 @@ public class MainFrame extends JFrame {
 		panelTop.add(btnNewButton_1, gbc_btnNewButton_1);
 	}
 
-	private void readFile(String filePath) {
-		ProjectInfo projectInfo = builderService.loadProjectInfo(filePath);
+	public void readFile(String filePath) {
+		projectInfo = builderService.loadProjectInfo(filePath);
+		projectInfo.setProjectSrc(projectSrcText.getText());
+		
 		oldPackageText.setText(projectInfo.getPackageName());
 		oldGroupIDText.setText(projectInfo.getGroupId());
 		oldArtifactIDText.setText(projectInfo.getArtifactId());
@@ -232,7 +234,7 @@ public class MainFrame extends JFrame {
 	/**
 	 * 主窗体中件部份设置
 	 */
-	private void initCenterPane() {
+	public void initCenterPane() {
 		JTabbedPane panelCenterTab = new JTabbedPane(JTabbedPane.TOP);
 		getContentPane().add(panelCenterTab, BorderLayout.CENTER);
 
@@ -243,12 +245,12 @@ public class MainFrame extends JFrame {
 		initTabPane3(panelCenterTab);
 	}
 
-	private void initTabPane3(JTabbedPane tabbedPane) {
+	public void initTabPane3(JTabbedPane tabbedPane) {
 		JPanel tabPanel_3 = new JPanel();
 		tabbedPane.addTab("生成Microservice项目代码", null, tabPanel_3, null);
 	}
 
-	private void initTabPane2(JTabbedPane tabbedPane) {
+	public void initTabPane2(JTabbedPane tabbedPane) {
 		JPanel tabPanel_2 = new JPanel();
 		tabbedPane.addTab("生成Manager项目代码", null, tabPanel_2, null);
 		GridBagLayout gbl_tabPanel_2 = new GridBagLayout();
@@ -265,6 +267,105 @@ public class MainFrame extends JFrame {
 		gbc_panel_1.gridx = 1;
 		gbc_panel_1.gridy = 0;
 		tabPanel_2.add(panel, gbc_panel_1);
+		GridBagLayout gbl_panel = new GridBagLayout();
+		gbl_panel.columnWidths = new int[] {150, 250};
+		gbl_panel.rowHeights = new int[] {30, 30, 30, 30, 30, 0};
+		gbl_panel.columnWeights = new double[]{0.0, 1.0};
+		gbl_panel.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
+		panel.setLayout(gbl_panel);
+		
+		JLabel label_1 = new JLabel("菜单模块");
+		GridBagConstraints gbc_label_1 = new GridBagConstraints();
+		gbc_label_1.insets = new Insets(0, 0, 5, 5);
+		gbc_label_1.anchor = GridBagConstraints.EAST;
+		gbc_label_1.gridx = 0;
+		gbc_label_1.gridy = 0;
+		panel.add(label_1, gbc_label_1);
+		
+		menuModelName = new JTextField();
+		GridBagConstraints gbc_menuModelName = new GridBagConstraints();
+		gbc_menuModelName.insets = new Insets(0, 0, 5, 0);
+		gbc_menuModelName.fill = GridBagConstraints.HORIZONTAL;
+		gbc_menuModelName.gridx = 1;
+		gbc_menuModelName.gridy = 0;
+		panel.add(menuModelName, gbc_menuModelName);
+		menuModelName.setColumns(10);
+		
+		JLabel lblNewLabel_5 = new JLabel("ModelName");
+		GridBagConstraints gbc_lblNewLabel_5 = new GridBagConstraints();
+		gbc_lblNewLabel_5.anchor = GridBagConstraints.EAST;
+		gbc_lblNewLabel_5.insets = new Insets(0, 0, 5, 5);
+		gbc_lblNewLabel_5.gridx = 0;
+		gbc_lblNewLabel_5.gridy = 1;
+		panel.add(lblNewLabel_5, gbc_lblNewLabel_5);
+		
+		modelName = new JTextField();
+		GridBagConstraints gbc_modelName = new GridBagConstraints();
+		gbc_modelName.insets = new Insets(0, 0, 5, 0);
+		gbc_modelName.fill = GridBagConstraints.HORIZONTAL;
+		gbc_modelName.gridx = 1;
+		gbc_modelName.gridy = 1;
+		panel.add(modelName, gbc_modelName);
+		modelName.setColumns(10);
+		
+		JLabel lblTable = new JLabel("TablePrefix");
+		lblTable.setHorizontalAlignment(SwingConstants.RIGHT);
+		GridBagConstraints gbc_lblTable = new GridBagConstraints();
+		gbc_lblTable.anchor = GridBagConstraints.EAST;
+		gbc_lblTable.insets = new Insets(0, 0, 5, 5);
+		gbc_lblTable.gridx = 0;
+		gbc_lblTable.gridy = 2;
+		panel.add(lblTable, gbc_lblTable);
+		
+		tablePrefix = new JTextField();
+		GridBagConstraints gbc_tablePrefix = new GridBagConstraints();
+		gbc_tablePrefix.insets = new Insets(0, 0, 5, 0);
+		gbc_tablePrefix.fill = GridBagConstraints.HORIZONTAL;
+		gbc_tablePrefix.gridx = 1;
+		gbc_tablePrefix.gridy = 2;
+		panel.add(tablePrefix, gbc_tablePrefix);
+		tablePrefix.setColumns(10);
+		
+		JButton btnNewButton_4 = new JButton("生成");
+		btnNewButton_4.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				int[] selectIndexs = table.getSelectedRows();
+				List<Table> tables = new ArrayList<Table>();
+				
+				for (int i = 0; i < selectIndexs.length; i++) {
+					tables.add(tableList.get(selectIndexs[i]));
+				}
+				projectInfo.setMenuModelName(menuModelName.getText());
+				projectInfo.setTablePrefix(tablePrefix.getText());
+				projectInfo.setModelName(modelName.getText());
+				projectInfo.setAuthor(author.getText());
+				
+				builderService.generatorManager(projectInfo, tables);
+			}
+		});
+		
+		JLabel label_2 = new JLabel("作者");
+		label_2.setHorizontalAlignment(SwingConstants.RIGHT);
+		GridBagConstraints gbc_label_2 = new GridBagConstraints();
+		gbc_label_2.anchor = GridBagConstraints.EAST;
+		gbc_label_2.fill = GridBagConstraints.VERTICAL;
+		gbc_label_2.insets = new Insets(0, 0, 5, 5);
+		gbc_label_2.gridx = 0;
+		gbc_label_2.gridy = 3;
+		panel.add(label_2, gbc_label_2);
+		
+		author = new JTextField();
+		GridBagConstraints gbc_author = new GridBagConstraints();
+		gbc_author.insets = new Insets(0, 0, 5, 0);
+		gbc_author.fill = GridBagConstraints.HORIZONTAL;
+		gbc_author.gridx = 1;
+		gbc_author.gridy = 3;
+		panel.add(author, gbc_author);
+		author.setColumns(10);
+		GridBagConstraints gbc_btnNewButton_4 = new GridBagConstraints();
+		gbc_btnNewButton_4.gridx = 1;
+		gbc_btnNewButton_4.gridy = 4;
+		panel.add(btnNewButton_4, gbc_btnNewButton_4);
 
 		JPanel panel_1 = new JPanel();
 		panel_1.setBorder(new TitledBorder(null, "数据库信息", TitledBorder.LEADING, TitledBorder.TOP, null, null));
@@ -276,7 +377,7 @@ public class MainFrame extends JFrame {
 		tabPanel_2.add(panel_1, gbc_panel);
 		GridBagLayout gbl_panel_1 = new GridBagLayout();
 		gbl_panel_1.columnWidths = new int[] { 400 };
-		gbl_panel_1.rowHeights = new int[] { 200, 150 };
+		gbl_panel_1.rowHeights = new int[] { 200, 183 };
 		gbl_panel_1.columnWeights = new double[] { 1.0 };
 		gbl_panel_1.rowWeights = new double[] { 0.0, 1.0 };
 		panel_1.setLayout(gbl_panel_1);
@@ -319,18 +420,18 @@ public class MainFrame extends JFrame {
 		panel_1.add(panel_3, gbc_panel_3);
 		GridBagLayout gbl_panel_3 = new GridBagLayout();
 		gbl_panel_3.columnWidths = new int[] { 150, 250 };
-		gbl_panel_3.rowHeights = new int[] { 30, 30, 30, 30, 30, 30 };
-		gbl_panel_3.columnWeights = new double[] { 0.0, 0.0 };
-		gbl_panel_3.rowWeights = new double[] { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
+		gbl_panel_3.rowHeights = new int[] {30, 30, 30, 30, 30};
+		gbl_panel_3.columnWeights = new double[] { 0.0, 1.0 };
+		gbl_panel_3.rowWeights = new double[] { 0.0, 0.0, 0.0, 0.0, 0.0 };
 		panel_3.setLayout(gbl_panel_3);
-
-		JLabel lblNewLabel = new JLabel("数据库驱动文件");
-		GridBagConstraints gbc_lblNewLabel = new GridBagConstraints();
-		gbc_lblNewLabel.insets = new Insets(0, 0, 5, 5);
-		gbc_lblNewLabel.anchor = GridBagConstraints.EAST;
-		gbc_lblNewLabel.gridx = 0;
-		gbc_lblNewLabel.gridy = 0;
-		panel_3.add(lblNewLabel, gbc_lblNewLabel);
+		
+				JLabel lblNewLabel_2 = new JLabel("连接URL");
+				GridBagConstraints gbc_lblNewLabel_2 = new GridBagConstraints();
+				gbc_lblNewLabel_2.anchor = GridBagConstraints.EAST;
+				gbc_lblNewLabel_2.insets = new Insets(0, 0, 5, 5);
+				gbc_lblNewLabel_2.gridx = 0;
+				gbc_lblNewLabel_2.gridy = 0;
+				panel_3.add(lblNewLabel_2, gbc_lblNewLabel_2);
 
 		JPanel panel_4 = new JPanel();
 		GridBagConstraints gbc_panel_4 = new GridBagConstraints();
@@ -340,139 +441,100 @@ public class MainFrame extends JFrame {
 		gbc_panel_4.gridy = 0;
 		panel_3.add(panel_4, gbc_panel_4);
 		panel_4.setLayout(new GridLayout(1, 2, 0, 0));
+		
+				dbURL = new JTextField();
+				panel_4.add(dbURL);
+				dbURL.setColumns(10);
+		
+				JLabel lblNewLabel_3 = new JLabel("数据库用户名");
+				GridBagConstraints gbc_lblNewLabel_3 = new GridBagConstraints();
+				gbc_lblNewLabel_3.anchor = GridBagConstraints.EAST;
+				gbc_lblNewLabel_3.insets = new Insets(0, 0, 5, 5);
+				gbc_lblNewLabel_3.gridx = 0;
+				gbc_lblNewLabel_3.gridy = 1;
+				panel_3.add(lblNewLabel_3, gbc_lblNewLabel_3);
+				
+						dbUserName = new JTextField();
+						GridBagConstraints gbc_dbUserName = new GridBagConstraints();
+						gbc_dbUserName.insets = new Insets(0, 0, 5, 0);
+						gbc_dbUserName.fill = GridBagConstraints.HORIZONTAL;
+						gbc_dbUserName.gridx = 1;
+						gbc_dbUserName.gridy = 1;
+						panel_3.add(dbUserName, gbc_dbUserName);
+						dbUserName.setColumns(10);
+		
+				JLabel lblNewLabel_4 = new JLabel("连接密码");
+				GridBagConstraints gbc_lblNewLabel_4 = new GridBagConstraints();
+				gbc_lblNewLabel_4.anchor = GridBagConstraints.EAST;
+				gbc_lblNewLabel_4.insets = new Insets(0, 0, 5, 5);
+				gbc_lblNewLabel_4.gridx = 0;
+				gbc_lblNewLabel_4.gridy = 2;
+				panel_3.add(lblNewLabel_4, gbc_lblNewLabel_4);
+		
+				dbPassword = new JTextField();
+				GridBagConstraints gbc_dbPassword = new GridBagConstraints();
+				gbc_dbPassword.insets = new Insets(0, 0, 5, 0);
+				gbc_dbPassword.fill = GridBagConstraints.HORIZONTAL;
+				gbc_dbPassword.gridx = 1;
+				gbc_dbPassword.gridy = 2;
+				panel_3.add(dbPassword, gbc_dbPassword);
+				dbPassword.setColumns(10);
+		
+		JLabel label = new JLabel("数据库名");
+		label.setHorizontalAlignment(SwingConstants.RIGHT);
+		GridBagConstraints gbc_label = new GridBagConstraints();
+		gbc_label.anchor = GridBagConstraints.EAST;
+		gbc_label.insets = new Insets(0, 0, 5, 5);
+		gbc_label.gridx = 0;
+		gbc_label.gridy = 3;
+		panel_3.add(label, gbc_label);
+		
+		dbName = new JTextField();
+		GridBagConstraints gbc_dbName = new GridBagConstraints();
+		gbc_dbName.insets = new Insets(0, 0, 5, 0);
+		gbc_dbName.fill = GridBagConstraints.HORIZONTAL;
+		gbc_dbName.gridx = 1;
+		gbc_dbName.gridy = 3;
+		panel_3.add(dbName, gbc_dbName);
+		dbName.setColumns(10);
+		
+				JButton btnNewButton_3 = new JButton("加载数据库");
+				btnNewButton_3.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent e) {
 
-		driverFile = new JTextField();
-		driverFile.setEditable(false);
-		panel_4.add(driverFile);
-		driverFile.setColumns(10);
+						try {
+							String jarFilePath = "";
+							String driverClass = "";
+							String url = dbURL.getText();
+							String username = dbUserName.getText();
+							String password = dbPassword.getText();
+							String database = "";
+							tableList = new DatabaseReader(jarFilePath,driverClass,url,username, password, database).readTables();
 
-		JButton btnNewButton_2 = new JButton("浏览...");
-		btnNewButton_2.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				JFileChooser chooser = new JFileChooser(); // 设置选择器
-				chooser.setMultiSelectionEnabled(false); // 设为单选
-				int returnVal = chooser.showOpenDialog(btnNewButton_2); // 打开文件选择框并接收选择框返回值
-				System.out.println("returnVal=" + returnVal);
-				// 判断用户是选择取消还是确定
-				if (returnVal == JFileChooser.APPROVE_OPTION) { // 如果符合文件类型
+							
+							
+							String[][] rows = new String[tableList.size()][2];
+							for (int i = 0; i < tableList.size(); i++) {
+								rows[i][0] = tableList.get(i).getName();
+								rows[i][1] = tableList.get(i).getRemark();
+							}
+							table.setModel(new DefaultTableModel(rows, columnNames));
 
-					String filePath = chooser.getSelectedFile().getAbsolutePath(); // 获取绝对路径
-					driverFile.setText(filePath);
-				}
-			}
-		});
-		panel_4.add(btnNewButton_2);
+						} catch (Exception e1) {
+							e1.printStackTrace();
+						}
 
-		JLabel lblNewLabel_1 = new JLabel("数据库驱动");
-		GridBagConstraints gbc_lblNewLabel_1 = new GridBagConstraints();
-		gbc_lblNewLabel_1.anchor = GridBagConstraints.EAST;
-		gbc_lblNewLabel_1.insets = new Insets(0, 0, 5, 5);
-		gbc_lblNewLabel_1.gridx = 0;
-		gbc_lblNewLabel_1.gridy = 1;
-		panel_3.add(lblNewLabel_1, gbc_lblNewLabel_1);
-
-		driverName = new JTextField();
-		GridBagConstraints gbc_driverName = new GridBagConstraints();
-		gbc_driverName.insets = new Insets(0, 0, 5, 0);
-		gbc_driverName.fill = GridBagConstraints.HORIZONTAL;
-		gbc_driverName.gridx = 1;
-		gbc_driverName.gridy = 1;
-		panel_3.add(driverName, gbc_driverName);
-		driverName.setColumns(10);
-
-		JLabel lblNewLabel_2 = new JLabel("连接URL");
-		GridBagConstraints gbc_lblNewLabel_2 = new GridBagConstraints();
-		gbc_lblNewLabel_2.anchor = GridBagConstraints.EAST;
-		gbc_lblNewLabel_2.insets = new Insets(0, 0, 5, 5);
-		gbc_lblNewLabel_2.gridx = 0;
-		gbc_lblNewLabel_2.gridy = 2;
-		panel_3.add(lblNewLabel_2, gbc_lblNewLabel_2);
-
-		dbURL = new JTextField();
-		GridBagConstraints gbc_dbURL = new GridBagConstraints();
-		gbc_dbURL.insets = new Insets(0, 0, 5, 0);
-		gbc_dbURL.fill = GridBagConstraints.HORIZONTAL;
-		gbc_dbURL.gridx = 1;
-		gbc_dbURL.gridy = 2;
-		panel_3.add(dbURL, gbc_dbURL);
-		dbURL.setColumns(10);
-
-		JLabel lblNewLabel_3 = new JLabel("数据库用户名");
-		GridBagConstraints gbc_lblNewLabel_3 = new GridBagConstraints();
-		gbc_lblNewLabel_3.anchor = GridBagConstraints.EAST;
-		gbc_lblNewLabel_3.insets = new Insets(0, 0, 5, 5);
-		gbc_lblNewLabel_3.gridx = 0;
-		gbc_lblNewLabel_3.gridy = 3;
-		panel_3.add(lblNewLabel_3, gbc_lblNewLabel_3);
-
-		dbUserName = new JTextField();
-		GridBagConstraints gbc_dbUserName = new GridBagConstraints();
-		gbc_dbUserName.insets = new Insets(0, 0, 5, 0);
-		gbc_dbUserName.fill = GridBagConstraints.HORIZONTAL;
-		gbc_dbUserName.gridx = 1;
-		gbc_dbUserName.gridy = 3;
-		panel_3.add(dbUserName, gbc_dbUserName);
-		dbUserName.setColumns(10);
-
-		JLabel lblNewLabel_4 = new JLabel("连接密码");
-		GridBagConstraints gbc_lblNewLabel_4 = new GridBagConstraints();
-		gbc_lblNewLabel_4.anchor = GridBagConstraints.EAST;
-		gbc_lblNewLabel_4.insets = new Insets(0, 0, 5, 5);
-		gbc_lblNewLabel_4.gridx = 0;
-		gbc_lblNewLabel_4.gridy = 4;
-		panel_3.add(lblNewLabel_4, gbc_lblNewLabel_4);
-
-		dbPassword = new JTextField();
-		GridBagConstraints gbc_dbPassword = new GridBagConstraints();
-		gbc_dbPassword.insets = new Insets(0, 0, 5, 0);
-		gbc_dbPassword.fill = GridBagConstraints.HORIZONTAL;
-		gbc_dbPassword.gridx = 1;
-		gbc_dbPassword.gridy = 4;
-		panel_3.add(dbPassword, gbc_dbPassword);
-		dbPassword.setColumns(10);
-
-		JButton btnNewButton_3 = new JButton("加载数据库");
-		btnNewButton_3.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-
-				try {
-					URL u = new URL("jar:file:" + driverFile.getText() + "!/");
-					URLClassLoader classLoader = new URLClassLoader(new URL[] { u });
-					Class<?> driverClass = classLoader.loadClass(driverName.getText());
-					Driver driver = (Driver) driverClass.newInstance();
-
-					Properties info = new Properties();
-					info.put("user", dbUserName.getText());
-					info.put("password", dbPassword.getText());
-					Connection conn = driver.connect(dbURL.getText(), info);
-					DatabaseMetaData m_DBMetaData = conn.getMetaData();
-					ResultSet tableRet = m_DBMetaData.getTables(null, "%", "%", new String[] { "TABLE" });
-					List<String> tableList = new ArrayList<String>();
-					while (tableRet.next()) {
-						tableList.add(tableRet.getString("TABLE_NAME"));
 					}
-					String[][] rows = new String[tableList.size()][1];
-					for (int i = 0; i < tableList.size(); i++) {
-						rows[i][0] = tableList.get(i);
-					}
-					table.setModel(new DefaultTableModel(rows, columnNames));
-					classLoader.close();
-
-				} catch (Exception e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
-
-			}
-		});
-		btnNewButton_3.setHorizontalAlignment(SwingConstants.LEFT);
-		GridBagConstraints gbc_btnNewButton_3 = new GridBagConstraints();
-		gbc_btnNewButton_3.gridx = 1;
-		gbc_btnNewButton_3.gridy = 5;
-		panel_3.add(btnNewButton_3, gbc_btnNewButton_3);
+				});
+				btnNewButton_3.setHorizontalAlignment(SwingConstants.LEFT);
+				GridBagConstraints gbc_btnNewButton_3 = new GridBagConstraints();
+				gbc_btnNewButton_3.insets = new Insets(0, 0, 5, 0);
+				gbc_btnNewButton_3.gridx = 1;
+				gbc_btnNewButton_3.gridy = 4;
+				panel_3.add(btnNewButton_3, gbc_btnNewButton_3);
 	}
 
-	private void initTabPane1(JTabbedPane tabbedPane) {
+	public void initTabPane1(JTabbedPane tabbedPane) {
 		JPanel tabPanel_1 = new JPanel();
 		tabbedPane.addTab("项目重命名", null, tabPanel_1, null);
 		tabbedPane.setEnabledAt(0, true);
@@ -794,17 +856,11 @@ public class MainFrame extends JFrame {
 				newProjectInfo.setName(newNameText.getText());
 				newProjectInfo.setUrl(newURLText.getText());
 				newProjectInfo.setDescription(newDescriptionText.getText());
+				newProjectInfo.setProjectSrc(projectInfo.getProjectSrc());
 
-				ProjectInfo oldProjectInfo = new ProjectInfo();
-				oldProjectInfo.setPackageName(oldPackageText.getText());
-				oldProjectInfo.setGroupId(oldGroupIDText.getText());
-				oldProjectInfo.setArtifactId(oldArtifactIDText.getText());
-				oldProjectInfo.setVersion(oldVersionText.getText());
-				oldProjectInfo.setName(oldNameText.getText());
-				oldProjectInfo.setUrl(oldURLText.getText());
-				oldProjectInfo.setDescription(oldDescriptionText.getText());
-
-				builderService.editProjectInfo(projectSrcText.getText(), oldProjectInfo, newProjectInfo);
+				builderService.editProjectInfo(projectInfo, newProjectInfo);
+				
+				projectInfo = newProjectInfo;
 			}
 		});
 		tab_1_panel_bottom.add(button);
